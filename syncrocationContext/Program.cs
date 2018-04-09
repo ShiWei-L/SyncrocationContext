@@ -73,6 +73,20 @@ namespace syncrocationContext {
       var multplyblock = new TransformBlock<int,int>(item=>item*2,new ExecutionDataflowBlockOptions{
         MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
       });
+
+      //自定义数据流块 使用Envapsulate方法取出数据流网络中任何具有单一输入块和输出块的部分,利用两个端点创建单独的数据流块
+      IPropagatorBlock<int,int> createMyCustomBlock()
+      {
+        var mb = new TransformBlock<int,int>(item=>item*2);
+        var addblock = new TransformBlock<int,int>(item=>item+2);
+        var divideBlock = new TransformBlock<int,int>(item=>item/2);
+
+        var flowCompletion = new  DataflowLinkOptions { PropagateCompletion = true };
+        mb.LinkTo(addblock,flowCompletion);
+        divideBlock.LinkTo(divideBlock,flowCompletion);
+        
+        return DataflowBlock.Encapsulate(mb,divideBlock);
+      }
       #endregion
 
     }
