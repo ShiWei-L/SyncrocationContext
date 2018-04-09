@@ -58,12 +58,21 @@ namespace syncrocationContext {
       }
 
       //断开连接
-      var link = block.LinkTo(new TransformBlock<int, int> (item => item - 2));
-      link.Dispose();
+      var link = block.LinkTo (new TransformBlock<int, int> (item => item - 2));
+      link.Dispose ();
 
+      //限制流量，使数据公平分发
+      var sourceBlock = new BufferBlock<int> ();
+      var options = new DataflowBlockOptions { BoundedCapacity = 1 };
+      var targetB = new BufferBlock<int> (options);
+      var targetA = new BufferBlock<int> (options);
+      sourceBlock.LinkTo (targetA);
+      sourceBlock.LinkTo (targetB);
 
-      //限制流量
-      
+      //数据流块并行处理 设置ataflowBlockOptions.Unbounded或大于零的数值
+      var multplyblock = new TransformBlock<int,int>(item=>item*2,new ExecutionDataflowBlockOptions{
+        MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
+      });
       #endregion
 
     }
