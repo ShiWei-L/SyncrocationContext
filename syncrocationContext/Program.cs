@@ -74,6 +74,8 @@ namespace syncrocationContext {
         MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
       });
 
+      var res = createMyCustomBlock();
+      await res.Completion;
       //自定义数据流块 使用Envapsulate方法取出数据流网络中任何具有单一输入块和输出块的部分,利用两个端点创建单独的数据流块
       IPropagatorBlock<int,int> createMyCustomBlock()
       {
