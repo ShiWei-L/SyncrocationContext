@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Timers;
 
 namespace rx {
@@ -45,6 +46,10 @@ namespace rx {
             client.DownloadStringAsync(new Uri("http://xxx.com"));
 
         
+
+            //在特定线程发送上下文
+            var currentContext = SynchronizationContext.Current;
+            Observable.Interval(TimeSpan.FromSeconds(1)).ObserveOn(currentContext).Subscribe(x=>Console.WriteLine(Environment.CurrentManagedThreadId));
             Console.ReadLine();
         }
     }
