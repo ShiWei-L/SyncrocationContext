@@ -60,6 +60,13 @@ namespace rx {
                 group.Subscribe(x=>Console.WriteLine(x));
             });
 
+            //事件限流
+            //每当事件到达重新计时.发送最后的事件
+            Observable.Interval(TimeSpan.FromMilliseconds(200)).Throttle(TimeSpan.FromSeconds(1)).Subscribe(x=>Console.WriteLine(x));
+            //不重新计时,发送最后的事件
+            Observable.Interval(TimeSpan.FromMilliseconds(200)).Sample(TimeSpan.FromSeconds(1)).Subscribe(x=>Console.WriteLine(x));
+            //条件限流
+            Observable.Interval(TimeSpan.FromSeconds(1)).Where(x=>x%2==0).Subscribe(x=>Console.WriteLine(x));
             Console.ReadLine();
         }
     }
