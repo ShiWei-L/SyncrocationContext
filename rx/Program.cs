@@ -50,6 +50,16 @@ namespace rx {
             //在特定线程发送上下文
             var currentContext = SynchronizationContext.Current;
             Observable.Interval(TimeSpan.FromSeconds(1)).ObserveOn(currentContext).Subscribe(x=>Console.WriteLine(Environment.CurrentManagedThreadId));
+            
+
+            //事件分组
+            Observable.Interval(TimeSpan.FromSeconds(1)).Buffer(2).Subscribe(x=>Console.WriteLine($"{Environment.CurrentManagedThreadId} {x[0]} {x[1]}"));
+
+            Observable.Interval(TimeSpan.FromSeconds(1)).Window(2).Subscribe(group=>
+            {
+                group.Subscribe(x=>Console.WriteLine(x));
+            });
+
             Console.ReadLine();
         }
     }
