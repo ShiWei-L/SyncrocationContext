@@ -67,6 +67,12 @@ namespace rx {
             Observable.Interval(TimeSpan.FromMilliseconds(200)).Sample(TimeSpan.FromSeconds(1)).Subscribe(x=>Console.WriteLine(x));
             //条件限流
             Observable.Interval(TimeSpan.FromSeconds(1)).Where(x=>x%2==0).Subscribe(x=>Console.WriteLine(x));
+
+
+            //超时
+            Observable.Interval(TimeSpan.FromSeconds(2)).Timeout(TimeSpan.FromSeconds(1)).Subscribe(x=>Console.WriteLine(x),ex=>Console.WriteLine($"超时 {ex.Message}"));
+            
+
             Console.ReadLine();
         }
     }
