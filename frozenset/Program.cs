@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using Nito.AsyncEx;
 
 namespace frozenset {
     class Program {
-        static void Main (string[] args) {
+        async Task Main (string[] args) {
 
             //不可变集合是永远不会改变的集合,写入操作会返回新实例，不可变集合之间通常共享了大部分存储空间，浪费不大。多个线程访问安全
             
@@ -57,7 +59,7 @@ namespace frozenset {
             //BlockingCollection 类可当做这种管道，阻塞队列，先进先出 限流 bounedCapacity属性
             //不过如果用到这个的话，更推荐数据流
             var blockqueue = new BlockingCollection<int>();
-           Task.Factory.StartNew(()=>
+           var blockqueueTask= Task.Factory.StartNew(()=>
            {
               blockqueue.Add(7);
               blockqueue.Add(8);
@@ -69,8 +71,55 @@ namespace frozenset {
             {
                 Console.WriteLine(item);
             }
+            await blockqueueTask;
+
+            //阻塞栈和包
+            //首先有一个管道，在线程之间传递消息或数据，但不想（不需要）这个管道使用先进先出的语义
+            //blockingCollection 可以在创建时选择规则
+            var _blockingStack = new BlockingCollection<int>(new ConcurrentBag<int>());
 
 
+            //异步队列
+            //在代码的各个部分之间以选进先出的方式传递消息或数据 多个消费者时需要注意捕获InvalidOperationException异常
+            var _syncQueue = new BufferBlock<int>();
+            await _syncQueue.SendAsync(7);
+            await _syncQueue.SendAsync(13);
+
+            _syncQueue.Complete();
+
+
+            while(await _syncQueue.OutputAvailableAsync())
+            {
+                Console.WriteLine(await _syncQueue.ReceiveAsync());
+            }
+
+
+            //异步栈和包
+            //需要有一个管道，在程序的各个部分传递数据，但不希望先进先出
+            var _asyncStack = new AsyncCollection<int>(new ConcurrentBag<int>(),maxCount:1);
+            //这个添加操作会立即完成，下一个添加会等待7被移除后
+            await _asyncStack.AddAsync(7);
+            _asyncStack.CompleteAdding();
+            while(await _asyncStack.OutputAvailableAsync())
+            {
+                var taskReuslt = await _asyncStack.TryTakeAsync();
+                if(taskReuslt.Success)
+                {
+                    Console.WriteLine(taskReuslt.Item);
+                }
+            }
+
+
+            //阻塞/异步队列
+            //先进先出 足够灵活 同步或异步方式处理
+            var queue = new  BufferBlock<int>();
+            await queue.SendAsync(1);
+            queue.Complete(); 
+
+            while(await queue.OutputAvailableAsync())
+            {
+                Console.WriteLine(await queue.ReceiveAsync());
+            }
             Console.WriteLine ("Hello World!");
         }
     }
